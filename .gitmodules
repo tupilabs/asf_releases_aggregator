@@ -1,0 +1,3 @@
+[submodule "markmail"]
+	path = markmail
+	url = git@github.com:tupilabs/markmail.git
