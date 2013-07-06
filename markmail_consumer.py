@@ -68,7 +68,7 @@ if __name__ == '__main__':
     logger.debug('Last subject: ' + str(last_subject_used))
     
     # compile pattern used
-    p = re.compile('.*(\[ANN\]|\[ANNOUNCE\])(.*)\<.*', re.IGNORECASE)
+    p = re.compile('.*(\[ANN\]|\[ANNOUNCE\]|\[ANNOUNCEMENT\])(.*)\<.*', re.IGNORECASE)
     
     # create markmail API
     markmail = MarkMail()
