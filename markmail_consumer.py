@@ -96,7 +96,7 @@ if __name__ == '__main__':
             
             results = r['search']['results']['result']
             
-            for result in results:
+            for result in reversed(results):
                 subject = result['subject']
                 
                 # use a regex to find [ANNOUNCE] or [ANN] and extract component/project name
