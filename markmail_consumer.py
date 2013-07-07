@@ -3,26 +3,26 @@ Created on Jul 5, 2013
 
 @author: kinow
 '''
-# markmail client
+from datetime import datetime, timedelta
 from markmail.markmail import MarkMail
+import ConfigParser
+import logging
+import os
 import re
 import sys
-from datetime import datetime
-import logging
 import tweepy
-import ConfigParser, os
 
-# for exit code
-# regex-matching against the e-mail subject
+FORMAT = '%(levelname)s %(asctime)-15s %(message)s'
+logging.basicConfig(format=FORMAT)
+logger = logging.getLogger('markmail')
+logger.setLevel(logging.INFO)
 
-# constants
-MAX_PAGES = 2
-TWEET_URL_LENGTH = 22
-
-
-def get_last_execution_time_and_subject():
+def get_last_execution_time_and_subject(hour_difference=-3):
     last_execution = datetime.now()
+    last_execution = last_execution + timedelta(hours = hour_difference)
     subject = ''
+    if (not os.path.exists('last_execution')):
+        return (last_execution, subject)
     f = None
     try: 
         f = open('last_execution', 'r+')
@@ -34,49 +34,61 @@ def get_last_execution_time_and_subject():
             date_token = str(d[:19])
             last_execution = datetime.strptime(date_token, '%Y-%m-%d %H:%M:%S')
             if (len(d) > 19):
-                subject = str(d[20:])
-    except:
-        print "Error opening last_execution file. Check the folder permissions.:", sys.exc_info()[0]
-        sys.exit(1)
-    else:
+                subject = str(d[19:])
+    finally:
         if (f is not None):
             f.close()
     
     return (last_execution, subject)
 
-def set_last_execution_time_and_subject(subject):
+def set_last_execution_time_and_subject(subject,hour_difference=-3):
     f = None
     try: 
-        f = open('last_execution', 'r+')
+        f = open('last_execution', 'w+')
         f.truncate()
-        f.write(str(datetime.now())[:19] + subject)
-    except:
-        print "Error opening last_execution file. Check the folder permissions.:", sys.exc_info()[0]
-        sys.exit(1)
-    else:
+        last_execution = datetime.now()
+        last_execution = last_execution + timedelta(hours=hour_difference)
+        f.write(str(last_execution)[:19] + subject)
+    finally:
         if (f is not None):
             f.close()
 
+def get_config():
+    config = ConfigParser.ConfigParser()
+    config.readfp(open('aggregator.cfg'))
+    return config
+
 if __name__ == '__main__':
-    FORMAT = '%(levelname)s %(asctime)-15s %(message)s'
-    logging.basicConfig(format=FORMAT)
-    logger = logging.getLogger('markmail')
-    logger.setLevel(logging.DEBUG)
-    # last execution
-    (last_execution, last_subject_used) = get_last_execution_time_and_subject()
-    logger.debug('Last execution: ' + str(last_execution))
-    logger.debug('Last subject: ' + str(last_subject_used))
+    logger.info('MarkMail consumer Twitter bot')
+    # config
+    logger.info('Reading configuration file')
+    try:
+        config = get_config()
+    except Exception, e:
+        logger.fatal('Failed to read configuration file')
+        logger.exception(e)
+        sys.exit(1)
     
-    # compile pattern used
+    # last execution
+    logger.info('Reading last execution')
+    try:
+        (last_execution, last_subject_used) = get_last_execution_time_and_subject()
+        logger.debug('Last execution: ' + str(last_execution))
+        logger.debug('Last subject: ' + str(last_subject_used))
+    except Exception, e:
+        logger.fatal('Error getting last execution time and subject')
+        logger.exception(e)
+        sys.exit(1)
+        
+    # compile pattern used for finding announcement subjects
     p = re.compile('.*(\[ANN\]|\[ANNOUNCE\]|\[ANNOUNCEMENT\])(.*)\<.*', re.IGNORECASE)
     
+    logger.info('Creating MarkMail API')
     # create markmail API
     markmail = MarkMail()
     
+    logger.info('Creating Twitter API')
     # create twitter API
-    config = ConfigParser.ConfigParser()
-    config.readfp(open('twitter.cfg'))
-    config.read(['site.cfg', os.path.expanduser('~/.myapp.cfg')])
     consumer_key = config.get('twitter', 'consumer_key')
     consumer_secret = config.get('twitter', 'consumer_secret')
     access_key = config.get('twitter', 'access_key')
@@ -85,13 +97,18 @@ if __name__ == '__main__':
     auth.set_access_token(access_key, access_token)
     twitter = tweepy.API(auth)
     
-    for i in range(1, MAX_PAGES+1):
-        logger.debug("Page: " + str(i))
+    max_pages = int(config.get('markmail', 'max_pages'))
+    url_length = int(config.get('twitter', 'tweet_url_length')) 
+    
+    tweet_counter = 0
+    
+    for i in range(1, max_pages+1):
+        logger.info("Search MarkMail. Page: " + str(i))
         try:
             r = markmail.search('list%3Aorg.apache.announce+order%3Adate-backward', i)
     
             numpages = r['search']['numpages']
-            if (numpages is None or numpages < (MAX_PAGES + 1)): 
+            if (numpages is None or numpages < (max_pages+1)): 
                 break
             
             results = r['search']['results']['result']
@@ -103,34 +120,47 @@ if __name__ == '__main__':
                 m = p.match(subject)
                 if m:
                     logger.debug('New/old message found: ' + subject)
-                    post_date = markmail.parse_date(result['date'])
+                    if (subject == last_subject_used):
+                        logger.debug('Skipping message. Reason: Duplicate subject found: ' + subject)
+                        continue
+                    
+                    try:
+                        post_date = markmail.parse_date(result['date'])
+                    except Exception, e:
+                        logger.fatal('Failed to parse result date: ' + str(result['date']))
+                        continue
 
                     if (post_date.date() < last_execution.date()):
                         logger.debug('Skipping message. Reason: too old. Date: ' + str(post_date))
                         continue
                     
-                    logger.info('Tweeting ' + subject)
                     last_subject_used = subject
                     
+                    logger.debug('Composing new tweet for ' + m.group(2))
                     # extract tweet body
                     tweet_message = m.group(2)
                     tweet_url = markmail.base + result['url']
                     tweet_tags = '#asf #opensource #announce'
                     # shorten message
-                    remaining_length = 140 - (TWEET_URL_LENGTH + len(tweet_tags) -2) # 2 space
+                    remaining_length = 140 - (url_length + len(tweet_tags) -2) # 2 space
                     if len(tweet_message) > remaining_length:
                         tweet_message = tweet_message[:(remaining_length-3)] + '...' 
                     tweet_body = '%s %s %s' % (tweet_message, tweet_url, tweet_tags)
-                    #print tweet_body
-                    #print str(result['date'])
                     
+                    logger.info('Tweeting new release: ' + m.group(2))
+                    tweet_counter+=1
                     twitter.update_status(tweet_body)
                     
-        except:
-            print "Unexpected error:", sys.exc_info()[0]
-            sys.exit(1)
+        except Exception, e:
+            logger.exception(e)
     
     logger.debug('Updating execution time')
-    set_last_execution_time_and_subject(last_subject_used)
+    try:
+        set_last_execution_time_and_subject(last_subject_used)
+    except Exception, e:
+        logger.fatal('Error setting last execution time and subject')
+        logger.exception(e)
+        sys.exit(1)
     
+    logger.info('Found ' + (str(tweet_counter)) + ' new releases')
     sys.exit(0)
