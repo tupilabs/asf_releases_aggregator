@@ -15,7 +15,7 @@ import tweepy
 FORMAT = '%(levelname)s %(asctime)-15s %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger('markmail')
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 def get_last_execution_time_and_subject(hour_difference=-3):
     last_execution = datetime.now()
@@ -38,7 +38,7 @@ def get_last_execution_time_and_subject(hour_difference=-3):
     finally:
         if (f is not None):
             f.close()
-    
+    subject = subject.rstrip()
     return (last_execution, subject)
 
 def set_last_execution_time_and_subject(subject,hour_difference=-3):
@@ -48,6 +48,7 @@ def set_last_execution_time_and_subject(subject,hour_difference=-3):
         f.truncate()
         last_execution = datetime.now()
         last_execution = last_execution + timedelta(hours=hour_difference)
+        subject = subject.rstrip()
         f.write(str(last_execution)[:19] + subject)
     finally:
         if (f is not None):
@@ -126,11 +127,12 @@ if __name__ == '__main__':
                     
                     try:
                         post_date = markmail.parse_date(result['date'])
+                        logger.debug('New/old message date: ' + post_date.strftime("%Y-%m-%d %H:%M:%S"))
                     except Exception, e:
-                        logger.fatal('Failed to parse result date: ' + str(result['date']))
+                        logger.fatal('Failed to parse result date: ' + str(result['date']) + '. Reason: ' + e.message)
                         continue
 
-                    if (post_date.date() < last_execution.date()):
+                    if ((last_execution - post_date) >= timedelta(0)):
                         logger.debug('Skipping message. Reason: too old. Date: ' + str(post_date))
                         continue
                     
