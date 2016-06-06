@@ -31,7 +31,7 @@ Fields details.
 * **tweet_url_length** URL length to discount from tweet message length
 * **database** SQLite database connection
 
-The Twitter credentials are stored in a *.env* dotEnv file.
+The Twitter credentials are stored in a *.env* [dotEnv](https://pypi.python.org/pypi/python-dotenv) file.
 
 ```
 TWITTER_CONSUMER_KEY=
