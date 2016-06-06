@@ -13,10 +13,6 @@ The bot is configured through the *aggregator.cfg* file. It is a simple INI file
 The following code listing contains an example *aggregator.cfg* configuration file.
 
 ```
-[aggregator]
-hour_difference=+12
-database=database.sqlite
-
 [markmail]
 max_pages=2
 

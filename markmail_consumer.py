@@ -37,11 +37,13 @@ parser.add_argument('--dry-run', dest='dryrun', action='store_true',
 args = parser.parse_args()
 # args.dryrun
 
-def set_last_execution_time_and_subject(subject, tweet_counter, conn):
-    f = None
-    date = datetime.datetime.utcnow()
-    c = conn.cursor()
-    c.execute("INSERT INTO executions ")
+def set_last_execution_time_and_subject(subject, tweet_counter, dryrun, conn):
+    if dryrun == False:
+        date = datetime.datetime.utcnow()
+        c = conn.cursor()
+        c.execute("c.execute('INSERT INTO executions(last_execution, subject, count) VALUES(?, ?, ?)", (date, subject, tweet_counter))
+    else:
+        logger.debug('DRY RUN not updating last execution time and subject')
 
 def tweet(tweet_message, tweet_url, tweet_tags, url_length, twitter):
     """Send a tweet to Twitter if dry-run is false, otherwise just logs what it would have done"""
@@ -212,7 +214,7 @@ def main():
     
     logger.debug('Updating execution time')
     try:
-        set_last_execution_time_and_subject(last_subject_used, tweet_counter, conn)
+        set_last_execution_time_and_subject(last_subject_used, tweet_counter, args.dryrun, conn)
     except Exception as e:
         logger.fatal('Error setting last execution time and subject')
         logger.exception(e)
