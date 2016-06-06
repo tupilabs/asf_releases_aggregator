@@ -61,7 +61,7 @@ def get_last_execution_time_and_subject(conn, hour_difference=-3):
         last_execution = last_execution + timedelta(hours = hour_difference)
         subject = ''
         c = conn.cursor()
-        c.execute('SELECT last_execution, subject, count FROM executions LIMIT 1')
+        c.execute('SELECT last_execution AS ["timestamp"], subject, count FROM executions ORDER BY last_execution LIMIT 1')
         row = c.fetchone()
         if row is not None:
             last_execution = row[0]
@@ -80,7 +80,7 @@ def get_last_execution_time_and_subject(conn, hour_difference=-3):
 def initialise_database():
     """Initialised the sqlite database. If non-existent, a new database and the tables will be
     created."""
-    conn = sqlite3.connect(os.path.join(os.path.dirname(__file__), 'database.sqlite'))
+    conn = sqlite3.connect(os.path.join(os.path.dirname(__file__), 'database.sqlite'), detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
     c = conn.cursor()
     c.execute('''CREATE TABLE executions
         (last_execution timestamp, subject TEXT, count INTEGER)''')
@@ -127,7 +127,7 @@ def main():
     if False == os.path.exists(os.path.join(os.path.dirname(__file__), 'database.sqlite')):
         conn = initialise_database()
     else:
-        conn = sqlite3.connect(os.path.join(os.path.dirname(__file__), 'database.sqlite'))
+        conn = sqlite3.connect(os.path.join(os.path.dirname(__file__), 'database.sqlite'), detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
 
     # last execution
     logger.info('Reading last execution')
@@ -175,7 +175,7 @@ def main():
                 m = p.match(subject)
                 if m:
                     logger.debug('New/old message found: ' + subject)
-                    if (subject == last_subject_used):
+                    if subject == last_subject_used:
                         logger.debug('Skipping message. Reason: Duplicate subject found: ' + subject)
                         continue
                     
@@ -185,8 +185,8 @@ def main():
                     except Exception as e:
                         logger.fatal('Failed to parse result date: ' + str(result['date']) + '. Reason: ' + e.message)
                         continue
-
-                    if ((last_execution - post_date) >= timedelta(0)):
+                    print(type(last_execution))
+                    if (last_execution - post_date) >= timedelta(0):
                         logger.debug('Skipping message. Reason: too old. Date: ' + str(post_date))
                         continue
                     
