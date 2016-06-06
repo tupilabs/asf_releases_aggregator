@@ -67,7 +67,9 @@ def get_config():
     config.readfp(open('aggregator.cfg'))
     return config
 
-if __name__ == '__main__':
+def main():
+    """Application entry point"""
+
     logger.info('MarkMail consumer Twitter bot')
     # config
     logger.info('Reading configuration file')
@@ -185,3 +187,6 @@ if __name__ == '__main__':
     
     logger.info('Found ' + (str(tweet_counter)) + ' new releases')
     sys.exit(SUCCESS_EXIT_CODE)
+
+if __name__ == '__main__':
+    main()
