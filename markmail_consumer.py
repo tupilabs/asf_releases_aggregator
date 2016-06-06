@@ -67,7 +67,7 @@ def get_last_execution_time_and_subject(conn):
     last_execution = None
     subject = None
     try:
-        last_execution = datetime.now()
+        last_execution = datetime.utcnow()
         subject = ''
         c = conn.cursor()
         c.execute('SELECT last_execution AS ["timestamp"], subject, count FROM executions ORDER BY last_execution LIMIT 1')
