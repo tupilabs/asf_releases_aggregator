@@ -3,8 +3,6 @@ Created on Jul 5, 2013
 
 @author: kinow
 '''
-from markmail.markmail import MarkMail
-
 from dotenv import load_dotenv
 import ConfigParser
 import sqlite3
@@ -15,6 +13,8 @@ import logging
 import os
 import re
 import sys
+
+from markmail.markmail import MarkMail
 
 import tweepy
 
