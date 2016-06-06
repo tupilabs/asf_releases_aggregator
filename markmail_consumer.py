@@ -35,18 +35,11 @@ parser.add_argument('--dry-run', dest='dryrun', action='store_true',
 args = parser.parse_args()
 # args.dryrun
 
-def set_last_execution_time_and_subject(subject, tweet_counter, conn, hour_difference=-3):
+def set_last_execution_time_and_subject(subject, tweet_counter, conn):
     f = None
-    # try: 
-    #     f = open('last_execution', 'w+')
-    #     f.truncate()
-    #     last_execution = datetime.now()
-    #     last_execution = last_execution + timedelta(hours=hour_difference)
-    #     subject = subject.rstrip()
-    #     f.write(str(last_execution)[:19] + subject)
-    # finally:
-    #     if (f is not None):
-    #         f.close()
+    date = datetime.datetime.utcnow()
+    c = conn.cursor()
+    c.execute("INSERT INTO executions ")
 
 def tweet(tweet_message, tweet_url, tweet_tags, url_length, twitter):
     """Send a tweet to Twitter if dry-run is false, otherwise just logs what it would have done"""
@@ -63,17 +56,14 @@ def tweet(tweet_message, tweet_url, tweet_tags, url_length, twitter):
     if twitter is not None:
         twitter.update_status(tweet_body)
 
-def get_last_execution_time_and_subject(conn, hour_difference=-3):
-    """Get the last execution time and message subject. The hour_difference
-    parameter is used to specify the difference between the UTC time and the
-    server time. Defaults to returning the current time, and an empty string,
-    unless it succeeds to read the values from database, or in case of an
-    error, then an exception will be thrown."""
+def get_last_execution_time_and_subject(conn):
+    """Get the last execution time and message subject. Defaults to returning the
+    current time, and an empty string, unless it succeeds to read the values from
+    database, or in case of an error, then an exception will be thrown."""
     last_execution = None
     subject = None
     try:
         last_execution = datetime.now()
-        last_execution = last_execution + timedelta(hours = hour_difference)
         subject = ''
         c = conn.cursor()
         c.execute('SELECT last_execution AS ["timestamp"], subject, count FROM executions ORDER BY last_execution LIMIT 1')
