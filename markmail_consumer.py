@@ -62,6 +62,16 @@ def set_last_execution_time_and_subject(subject,hour_difference=-3):
         if (f is not None):
             f.close()
 
+def get_dotenv():
+    """Load configuration dotEnv file .env file"""
+    try:
+        dotenv_path = join(dirname(__file__), '.env')
+        load_dotenv(dotenv_path)
+    except Exception, e:
+        logger.fatal('Failed to read dotEnv file')
+        logger.exception(e)
+        sys.exit(ERROR_EXIT_CODE)
+
 def get_config():
     """Load configuration INI file aggregator.cfg"""
     config = None
@@ -75,16 +85,6 @@ def get_config():
         logger.exception(e)
         sys.exit(ERROR_EXIT_CODE)
     return config
-
-def get_dotenv():
-    """Load configuration dotEnv file .env file"""
-    try:
-        dotenv_path = join(dirname(__file__), '.env')
-        load_dotenv(dotenv_path)
-    except Exception, e:
-        logger.fatal('Failed to read dotEnv file')
-        logger.exception(e)
-        sys.exit(ERROR_EXIT_CODE)
 
 def main():
     """Application entry point"""
