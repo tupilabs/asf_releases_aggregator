@@ -77,6 +77,7 @@ def get_config():
     return config
 
 def get_dotenv():
+    """Load configuration dotEnv file .env file"""
     try:
         dotenv_path = join(dirname(__file__), '.env')
         load_dotenv(dotenv_path)
