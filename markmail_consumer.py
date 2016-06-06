@@ -110,15 +110,17 @@ def get_config():
         sys.exit(ERROR_EXIT_CODE)
     return config
 
-def tweet(tweet_message, tweet_url, tweet_tags):
+def tweet(tweet_message, tweet_url, tweet_tags, url_length, twitter):
+    if twitter is not None:
+        logger.info('Tweeting new release: ' + tweet_message)
+    else:
+        logger.info('DRY-RUN Tweeting new release: ' + tweet_message)
     # shorten message
     remaining_length = 140 - (url_length + len(tweet_tags) -2) # 2 space
     if len(tweet_message) > remaining_length:
         tweet_message = tweet_message[:(remaining_length-3)] + '...' 
     tweet_body = '%s %s %s' % (tweet_message, tweet_url, tweet_tags)
     
-    logger.info('Tweeting new release: ' + m.group(2))
-    tweet_counter+=1
     if twitter is not None:
         twitter.update_status(tweet_body)
 
@@ -197,7 +199,6 @@ def main():
                     except Exception as e:
                         logger.fatal('Failed to parse result date: ' + str(result['date']) + '. Reason: ' + e.message)
                         continue
-                    print(type(last_execution))
                     if (last_execution - post_date) >= timedelta(0):
                         logger.debug('Skipping message. Reason: too old. Date: ' + str(post_date))
                         continue
@@ -210,7 +211,8 @@ def main():
                     tweet_tags = '#asf #opensource #announce'
 
                     logger.debug('Composing new tweet for [' + tweet_message + ']')
-                    tweet(tweet_message, tweet_url, tweet_tags)
+                    tweet(tweet_message, tweet_url, tweet_tags, url_length, twitter)
+                    tweet_counter+=1
                     
         except Exception as e:
             logger.exception(e)
