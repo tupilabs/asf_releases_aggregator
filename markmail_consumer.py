@@ -6,6 +6,7 @@ Created on Jul 5, 2013
 from dotenv import load_dotenv
 import configparser
 import sqlite3
+import argparse
 
 from datetime import datetime, timedelta
 
@@ -25,6 +26,14 @@ FORMAT = '%(levelname)s %(asctime)-15s %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger('markmail')
 logger.setLevel(logging.DEBUG)
+
+
+parser = argparse.ArgumentParser(description='markmail_consumer Twitter bot aggregator')
+parser.add_argument('--dry-run', dest='dryrun', action='store_true',
+                    help='Dry run for experimenting with the script, without updating the Twitter account')
+
+args = parser.parse_args()
+# args.dryrun
 
 def set_last_execution_time_and_subject(subject,hour_difference=-3):
     f = None
@@ -124,8 +133,6 @@ def main():
     logger.info('Reading last execution')
     (last_execution, last_subject_used) = get_last_execution_time_and_subject(conn)
 
-    return
-        
     # compile pattern used for finding announcement subjects
     p = re.compile('.*(\[ANN\]|\[ANNOUNCE\]|\[ANNOUNCEMENT\])(.*)\<.*', re.IGNORECASE)
     
@@ -142,6 +149,7 @@ def main():
     auth = tweepy.auth.OAuthHandler(consumer_key, consumer_secret)
     auth.set_access_token(access_key, access_token)
     twitter = tweepy.API(auth)
+    return
     
     max_pages = int(config.get('markmail', 'max_pages'))
     url_length = int(config.get('twitter', 'tweet_url_length')) 
