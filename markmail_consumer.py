@@ -201,7 +201,7 @@ def main():
                     last_subject_used = subject
                     
                     # extract tweet body
-                    tweet_message = m.group(2).rstrip().strip()
+                    tweet_message = m.group(2).strip()
                     tweet_url = markmail.base + result['url']
                     tweet_tags = '#asf #opensource #announce'
 
