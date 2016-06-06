@@ -53,30 +53,34 @@ def get_last_execution_time_and_subject(conn, hour_difference=-3):
         subject = ''
         c = conn.cursor()
         c.execute('SELECT last_execution, subject, count FROM executions LIMIT 1')
-        r = c.fetchone()
-        print(r)
-
-        logger.debug('Last execution: ' + str(last_execution))
-        logger.debug('Last subject: ' + str(last_subject_used))
+        row = c.fetchone()
+        if row is not None:
+            last_execution = row[0]
+            subject = row[1].rstrip()
     except Exception as e:
+        if conn != None:
+            conn.close()
         logger.fatal('Error getting last execution time and subject')
         logger.exception(e)
         sys.exit(ERROR_EXIT_CODE)
+
+    logger.debug('Last execution: ' + str(last_execution))
+    logger.debug('Last subject: ' + str(subject))
     return (last_execution, subject)
 
 def initialise_database():
     """Initialised the sqlite database. If non-existent, a new database and the tables will be
     created."""
-    conn = sqlite3.connect(join(dirname(__file__), 'database.sqlite'))
+    conn = sqlite3.connect(os.path.join(os.path.dirname(__file__), 'database.sqlite'))
     c = conn.cursor()
     c.execute('''CREATE TABLE executions
-        (TEXT last_execution, TEXT subject, INTEGER count)''')
+        (last_execution timestamp, subject TEXT, count INTEGER)''')
     return conn
 
 def get_dotenv():
     """Load configuration dotEnv file .env file"""
     try:
-        dotenv_path = join(dirname(__file__), '.env')
+        dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
         load_dotenv(dotenv_path)
     except Exception as e:
         logger.fatal('Failed to read dotEnv file')
@@ -88,7 +92,7 @@ def get_config():
     config = None
     try:
         config = configparser.ConfigParser()
-        config_file_path = join(dirname(__file__), 'aggregator.cfg')
+        config_file_path = os.path.join(os.path.dirname(__file__), 'aggregator.cfg')
         with open(config_file_path) as f:
             config.readfp(f)
     except Exception as e:
@@ -111,10 +115,10 @@ def main():
     
     logger.info('Reading sqlite database')
     conn = None
-    if False == os.path.exists(join(dirname(__file__), 'database.sqlite')):
+    if False == os.path.exists(os.path.join(os.path.dirname(__file__), 'database.sqlite')):
         conn = initialise_database()
     else:
-        conn = sqlite3.connect(join(dirname(__file__), 'database.sqlite'))
+        conn = sqlite3.connect(os.path.join(os.path.dirname(__file__), 'database.sqlite'))
 
     # last execution
     logger.info('Reading last execution')
