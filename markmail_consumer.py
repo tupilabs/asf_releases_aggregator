@@ -7,6 +7,7 @@ from markmail.markmail import MarkMail
 
 from dotenv import load_dotenv
 import ConfigParser
+import sqlite3
 
 from datetime import datetime, timedelta
 
@@ -25,30 +26,6 @@ logging.basicConfig(format=FORMAT)
 logger = logging.getLogger('markmail')
 logger.setLevel(logging.DEBUG)
 
-def get_last_execution_time_and_subject(hour_difference=-3):
-    last_execution = datetime.now()
-    last_execution = last_execution + timedelta(hours = hour_difference)
-    subject = ''
-    if (not os.path.exists('last_execution')):
-        return (last_execution, subject)
-    f = None
-    try: 
-        f = open('last_execution', 'r+')
-        d = f.readline()
-        if (d is None or d is ''):
-            f.truncate()
-            f.write(str(last_execution))
-        elif len(d) >= 19:
-            date_token = str(d[:19])
-            last_execution = datetime.strptime(date_token, '%Y-%m-%d %H:%M:%S')
-            if (len(d) > 19):
-                subject = str(d[19:])
-    finally:
-        if (f is not None):
-            f.close()
-    subject = subject.rstrip()
-    return (last_execution, subject)
-
 def set_last_execution_time_and_subject(subject,hour_difference=-3):
     f = None
     try: 
@@ -61,6 +38,51 @@ def set_last_execution_time_and_subject(subject,hour_difference=-3):
     finally:
         if (f is not None):
             f.close()
+
+def get_last_execution_time_and_subject(hour_difference=-3):
+    """Get the last execution time and message subject. The hour_difference
+    parameter is used to specify the difference between the UTC time and the
+    server time. Defaults to returning the current time, and an empty string,
+    unless it succeeds to read the values from database, or in case of an
+    error, then an exception will be thrown."""
+    last_execution = None
+    subject = None
+    try:        
+        last_execution = datetime.now()
+        last_execution = last_execution + timedelta(hours = hour_difference)
+        subject = ''
+        if (not os.path.exists('last_execution')):
+            return (last_execution, subject)
+        f = None
+        with open('last_execution', 'r+') as f:
+        d = f.readline()
+        if (d is None or d is ''):
+            f.truncate()
+            f.write(str(last_execution))
+        elif len(d) >= 19:
+            date_token = str(d[:19])
+            last_execution = datetime.strptime(date_token, '%Y-%m-%d %H:%M:%S')
+            if (len(d) > 19):
+                subject = str(d[19:])
+            f.close()
+        subject = subject.rstrip()
+
+        logger.debug('Last execution: ' + str(last_execution))
+        logger.debug('Last subject: ' + str(last_subject_used))
+    except Exception, e:
+        logger.fatal('Error getting last execution time and subject')
+        logger.exception(e)
+        sys.exit(ERROR_EXIT_CODE)
+    return (last_execution, subject)
+
+def initialise_database():
+    """Initialised the sqlite database. If non-existent, a new database and the tables will be
+    created."""
+    conn = sqlite3.connect(join(dirname(__file__), 'database.sqlite'))
+    c = conn.cursor()
+    c.execute('''CREATE TABLE executions
+        (TEXT last_execution, TEXT subject, INTEGER count)''')
+    return conn
 
 def get_dotenv():
     """Load configuration dotEnv file .env file"""
@@ -98,16 +120,16 @@ def main():
     logger.info('Reading dotEnv file')
     get_dotenv()
     
+    logger.info('Reading sqlite database')
+    conn = None
+    if False == os.path.exists(join(dirname(__file__), 'database.sqlite')):
+        conn = initialise_database()
+    else:
+        conn = sqlite3.connect(join(dirname(__file__), 'database.sqlite'))
+
     # last execution
     logger.info('Reading last execution')
-    try:
-        (last_execution, last_subject_used) = get_last_execution_time_and_subject()
-        logger.debug('Last execution: ' + str(last_execution))
-        logger.debug('Last subject: ' + str(last_subject_used))
-    except Exception, e:
-        logger.fatal('Error getting last execution time and subject')
-        logger.exception(e)
-        sys.exit(ERROR_EXIT_CODE)
+    (last_execution, last_subject_used) = get_last_execution_time_and_subject()
         
     # compile pattern used for finding announcement subjects
     p = re.compile('.*(\[ANN\]|\[ANNOUNCE\]|\[ANNOUNCEMENT\])(.*)\<.*', re.IGNORECASE)
