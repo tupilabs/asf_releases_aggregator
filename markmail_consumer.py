@@ -63,26 +63,20 @@ def set_last_execution_time_and_subject(subject,hour_difference=-3):
             f.close()
 
 def get_config():
-    config = ConfigParser.ConfigParser()
-    config.readfp(open('aggregator.cfg'))
-    return config
-
-def main():
-    """Application entry point"""
-
-    logger.info('MarkMail consumer Twitter bot')
-    # config
-    logger.info('Reading configuration file')
+    """Load configuration INI file aggregator.cfg"""
     config = None
     try:
-        config = get_config()
+        config = ConfigParser.ConfigParser()
+        config_file_path = join(dirname(__file__), 'aggregator.cfg')
+        with open(config_file_path) as f:
+            config.readfp(f)
     except Exception, e:
         logger.fatal('Failed to read configuration file')
         logger.exception(e)
         sys.exit(ERROR_EXIT_CODE)
+    return config
 
-    logger.info('Reading dotEnv file')
-    dotEnv = None
+def get_dotenv():
     try:
         dotenv_path = join(dirname(__file__), '.env')
         load_dotenv(dotenv_path)
@@ -90,6 +84,18 @@ def main():
         logger.fatal('Failed to read dotEnv file')
         logger.exception(e)
         sys.exit(ERROR_EXIT_CODE)
+
+def main():
+    """Application entry point"""
+
+    logger.info('MarkMail consumer Twitter bot')
+
+    # config
+    logger.info('Reading configuration file')
+    config = get_config()
+
+    logger.info('Reading dotEnv file')
+    get_dotenv()
     
     # last execution
     logger.info('Reading last execution')
