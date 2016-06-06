@@ -151,7 +151,7 @@ if __name__ == '__main__':
                     
                     logger.info('Tweeting new release: ' + m.group(2))
                     tweet_counter+=1
-                    twitter.update_status(tweet_body)
+                    #twitter.update_status(tweet_body)
                     
         except Exception, e:
             logger.exception(e)
