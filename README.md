@@ -1,8 +1,8 @@
 asf_releases_aggregator
 =======================
 
-Twitter @asf_releases aggregator. An automated Twitted bot aggregator. Retrieves the last releases
-and tweets them for you.
+Twitter [@asf_releases](http://twitter.com/asf_releases). An automated Twitted bot aggregator.
+Retrieves the last releases and tweets them for you.
 
 Uses a simple logger in the server, [Markmail hacky Python API](https://github.com/tupilabs/markmail),
 and Tweepy.
