@@ -39,7 +39,7 @@ args = parser.parse_args()
 
 def set_last_execution_time_and_subject(subject, tweet_counter, dryrun, conn):
     if dryrun == False:
-        date = datetime.datetime.utcnow()
+        date = datetime.utcnow()
         c = conn.cursor()
         c.execute("c.execute('INSERT INTO executions(last_execution, subject, count) VALUES(?, ?, ?)", (date, subject, tweet_counter))
     else:
