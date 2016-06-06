@@ -5,7 +5,7 @@ Twitter [@asf_releases](http://twitter.com/asf_releases). An automated Twitted b
 Retrieves the last releases and tweets them for you.
 
 Uses a simple logger in the server, [Markmail hacky Python API](https://github.com/tupilabs/markmail),
-and Tweepy.
+and Tweepy. Data is stored in a local SQLite database.
 
 ## Configuration
 
@@ -15,6 +15,7 @@ The following code listing contains an example *aggregator.cfg* configuration fi
 ```
 [aggregator]
 hour_difference=+12
+database=database.sqlite
 
 [markmail]
 max_pages=2
@@ -28,10 +29,7 @@ Fields details.
 * **hour_difference** UTC time diff in the server
 * **max_pages** Maximum of pages to retrieve from Markmail
 * **tweet_url_length** URL length to discount from tweet message length
-* **consumer_key** Twitter consumer key
-* **consumer_secret** Twitter consumer secret
-* **access_key** Twitter access key
-* **access_token** Twitter access token
+* **database** SQLite database connection
 
 The Twitter credentials are stored in a *.env* dotEnv file.
 
