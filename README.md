@@ -74,6 +74,22 @@ git submodule init
 git submodule update
 ```
 
+# Maintenance
+
+You can change values in the sqlite database. As in the following example, where we set the
+last execution date manually.
+
+```
+import sqlite3
+conn = sqlite3.connect('database.sqlite', detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
+import datetime
+date = datetime.datetime(2016, 1, 1, 0, 0, 0)
+c = conn.cursor()
+c.execute('INSERT INTO executions(last_execution, subject, count) VALUES(?, "", 0)', (date,))
+conn.commit()
+conn.close()
+```
+
 ## License
 
 The code is licensed under the Apache License v2. The Markmail API used by this code, it licensed under
