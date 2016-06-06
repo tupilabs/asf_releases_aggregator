@@ -35,7 +35,7 @@ parser.add_argument('--dry-run', dest='dryrun', action='store_true',
 args = parser.parse_args()
 # args.dryrun
 
-def set_last_execution_time_and_subject(subject,hour_difference=-3):
+def set_last_execution_time_and_subject(subject, tweet_counter, conn, hour_difference=-3):
     f = None
     # try: 
     #     f = open('last_execution', 'w+')
@@ -109,6 +109,18 @@ def get_config():
         logger.exception(e)
         sys.exit(ERROR_EXIT_CODE)
     return config
+
+def tweet(tweet_message, tweet_url, tweet_tags):
+    # shorten message
+    remaining_length = 140 - (url_length + len(tweet_tags) -2) # 2 space
+    if len(tweet_message) > remaining_length:
+        tweet_message = tweet_message[:(remaining_length-3)] + '...' 
+    tweet_body = '%s %s %s' % (tweet_message, tweet_url, tweet_tags)
+    
+    logger.info('Tweeting new release: ' + m.group(2))
+    tweet_counter+=1
+    if twitter is not None:
+        twitter.update_status(tweet_body)
 
 def main():
     """Application entry point"""
@@ -192,28 +204,20 @@ def main():
                     
                     last_subject_used = subject
                     
-                    logger.debug('Composing new tweet for ' + m.group(2))
                     # extract tweet body
                     tweet_message = m.group(2)
                     tweet_url = markmail.base + result['url']
                     tweet_tags = '#asf #opensource #announce'
-                    # shorten message
-                    remaining_length = 140 - (url_length + len(tweet_tags) -2) # 2 space
-                    if len(tweet_message) > remaining_length:
-                        tweet_message = tweet_message[:(remaining_length-3)] + '...' 
-                    tweet_body = '%s %s %s' % (tweet_message, tweet_url, tweet_tags)
-                    
-                    logger.info('Tweeting new release: ' + m.group(2))
-                    tweet_counter+=1
-                    if twitter is not None:
-                        twitter.update_status(tweet_body)
+
+                    logger.debug('Composing new tweet for [' + tweet_message + ']')
+                    tweet(tweet_message, tweet_url, tweet_tags)
                     
         except Exception as e:
             logger.exception(e)
     
     logger.debug('Updating execution time')
     try:
-        set_last_execution_time_and_subject(last_subject_used)
+        set_last_execution_time_and_subject(last_subject_used, tweet_counter, conn)
     except Exception as e:
         logger.fatal('Error setting last execution time and subject')
         logger.exception(e)
