@@ -37,16 +37,16 @@ args = parser.parse_args()
 
 def set_last_execution_time_and_subject(subject,hour_difference=-3):
     f = None
-    try: 
-        f = open('last_execution', 'w+')
-        f.truncate()
-        last_execution = datetime.now()
-        last_execution = last_execution + timedelta(hours=hour_difference)
-        subject = subject.rstrip()
-        f.write(str(last_execution)[:19] + subject)
-    finally:
-        if (f is not None):
-            f.close()
+    # try: 
+    #     f = open('last_execution', 'w+')
+    #     f.truncate()
+    #     last_execution = datetime.now()
+    #     last_execution = last_execution + timedelta(hours=hour_difference)
+    #     subject = subject.rstrip()
+    #     f.write(str(last_execution)[:19] + subject)
+    # finally:
+    #     if (f is not None):
+    #         f.close()
 
 def get_last_execution_time_and_subject(conn, hour_difference=-3):
     """Get the last execution time and message subject. The hour_difference
@@ -140,16 +140,17 @@ def main():
     # create markmail API
     markmail = MarkMail()
     
-    logger.info('Creating Twitter API')
-    # create twitter API
-    consumer_key = os.environ.get('TWITTER_CONSUMER_KEY')
-    consumer_secret = os.environ.get('TWITTER_CONSUMER_SECRET')
-    access_key = os.environ.get('TWITTER_ACCESS_KEY')
-    access_token = os.environ.get('TWITTER_ACCESS_TOKEN')
-    auth = tweepy.auth.OAuthHandler(consumer_key, consumer_secret)
-    auth.set_access_token(access_key, access_token)
-    twitter = tweepy.API(auth)
-    return
+    twitter = None
+    if args.dryrun == False:
+        logger.info('Creating Twitter API')
+        # create twitter API
+        consumer_key = os.environ.get('TWITTER_CONSUMER_KEY')
+        consumer_secret = os.environ.get('TWITTER_CONSUMER_SECRET')
+        access_key = os.environ.get('TWITTER_ACCESS_KEY')
+        access_token = os.environ.get('TWITTER_ACCESS_TOKEN')
+        auth = tweepy.auth.OAuthHandler(consumer_key, consumer_secret)
+        auth.set_access_token(access_key, access_token)
+        twitter = tweepy.API(auth)
     
     max_pages = int(config.get('markmail', 'max_pages'))
     url_length = int(config.get('twitter', 'tweet_url_length')) 
@@ -161,8 +162,8 @@ def main():
         try:
             r = markmail.search('list%3Aorg.apache.announce+order%3Adate-backward', i)
     
-            numpages = r['search']['numpages']
-            if (numpages is None or numpages < (max_pages+1)): 
+            numpages = int(r['search']['numpages'])
+            if numpages is None or numpages < (max_pages+1): 
                 break
             
             results = r['search']['results']['result']
@@ -204,7 +205,8 @@ def main():
                     
                     logger.info('Tweeting new release: ' + m.group(2))
                     tweet_counter+=1
-                    #twitter.update_status(tweet_body)
+                    if twitter is not None:
+                        twitter.update_status(tweet_body)
                     
         except Exception as e:
             logger.exception(e)
