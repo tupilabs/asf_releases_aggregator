@@ -22,7 +22,6 @@ tweet_url_length=22
 
 Fields details.
 
-* **hour_difference** UTC time diff in the server
 * **max_pages** Maximum of pages to retrieve from Markmail
 * **tweet_url_length** URL length to discount from tweet message length
 * **database** SQLite database connection
