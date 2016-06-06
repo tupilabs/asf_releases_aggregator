@@ -71,6 +71,7 @@ if __name__ == '__main__':
     logger.info('MarkMail consumer Twitter bot')
     # config
     logger.info('Reading configuration file')
+    config = None
     try:
         config = get_config()
     except Exception, e:
@@ -79,8 +80,10 @@ if __name__ == '__main__':
         sys.exit(ERROR_EXIT_CODE)
 
     logger.info('Reading dotEnv file')
+    dotEnv = None
     try:
         dotenv_path = join(dirname(__file__), '.env')
+        load_dotenv(dotenv_path)
     except Exception, e:
         logger.fatal('Failed to read dotEnv file')
         logger.exception(e)
@@ -106,10 +109,10 @@ if __name__ == '__main__':
     
     logger.info('Creating Twitter API')
     # create twitter API
-    consumer_key = config.get('twitter', 'consumer_key')
-    consumer_secret = config.get('twitter', 'consumer_secret')
-    access_key = config.get('twitter', 'access_key')
-    access_token = config.get('twitter', 'access_token')
+    consumer_key = os.environ.get('TWITTER_CONSUMER_KEY')
+    consumer_secret = os.environ.get('TWITTER_CONSUMER_SECRET')
+    access_key = os.environ.get('TWITTER_ACCESS_KEY')
+    access_token = os.environ.get('TWITTER_ACCESS_TOKEN')
     auth = tweepy.auth.OAuthHandler(consumer_key, consumer_secret)
     auth.set_access_token(access_key, access_token)
     twitter = tweepy.API(auth)
