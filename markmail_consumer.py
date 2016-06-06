@@ -3,14 +3,22 @@ Created on Jul 5, 2013
 
 @author: kinow
 '''
-from datetime import datetime, timedelta
 from markmail.markmail import MarkMail
+
+from dotenv import load_dotenv
 import ConfigParser
+
+from datetime import datetime, timedelta
+
 import logging
 import os
 import re
 import sys
+
 import tweepy
+
+ERROR_EXIT_CODE=1
+SUCCESS_EXIT_CODE=0
 
 FORMAT = '%(levelname)s %(asctime)-15s %(message)s'
 logging.basicConfig(format=FORMAT)
@@ -68,7 +76,15 @@ if __name__ == '__main__':
     except Exception, e:
         logger.fatal('Failed to read configuration file')
         logger.exception(e)
-        sys.exit(1)
+        sys.exit(ERROR_EXIT_CODE)
+
+    logger.info('Reading dotEnv file')
+    try:
+        dotenv_path = join(dirname(__file__), '.env')
+    except Exception, e:
+        logger.fatal('Failed to read dotEnv file')
+        logger.exception(e)
+        sys.exit(ERROR_EXIT_CODE)
     
     # last execution
     logger.info('Reading last execution')
@@ -79,7 +95,7 @@ if __name__ == '__main__':
     except Exception, e:
         logger.fatal('Error getting last execution time and subject')
         logger.exception(e)
-        sys.exit(1)
+        sys.exit(ERROR_EXIT_CODE)
         
     # compile pattern used for finding announcement subjects
     p = re.compile('.*(\[ANN\]|\[ANNOUNCE\]|\[ANNOUNCEMENT\])(.*)\<.*', re.IGNORECASE)
@@ -162,7 +178,7 @@ if __name__ == '__main__':
     except Exception, e:
         logger.fatal('Error setting last execution time and subject')
         logger.exception(e)
-        sys.exit(1)
+        sys.exit(ERROR_EXIT_CODE)
     
     logger.info('Found ' + (str(tweet_counter)) + ' new releases')
-    sys.exit(0)
+    sys.exit(SUCCESS_EXIT_CODE)
