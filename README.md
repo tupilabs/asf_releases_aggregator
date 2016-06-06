@@ -58,4 +58,4 @@ the GPL license. See LICENSE.txt for more.
 ## Infra
 
 The bot is hosted at TupiLabs VPS servers, and the results can be see at 
-(@asf_releases)[http://twitter.com/asf_releases].
+[@asf_releases](http://twitter.com/asf_releases).
