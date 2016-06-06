@@ -1,6 +1,8 @@
 '''
 Created on Jul 5, 2013
 
+Updated on Jun 6, 2016 - Adding Python 3, sqlite, dotEnv, dryrun option, argparse, and reviewing code
+
 @author: kinow
 '''
 from dotenv import load_dotenv
