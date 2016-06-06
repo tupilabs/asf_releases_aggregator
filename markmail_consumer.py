@@ -48,6 +48,21 @@ def set_last_execution_time_and_subject(subject, tweet_counter, conn, hour_diffe
     #     if (f is not None):
     #         f.close()
 
+def tweet(tweet_message, tweet_url, tweet_tags, url_length, twitter):
+    """Send a tweet to Twitter if dry-run is false, otherwise just logs what it would have done"""
+    if twitter is not None:
+        logger.info('Tweeting new release: ' + tweet_message)
+    else:
+        logger.info('DRY-RUN Tweeting new release: ' + tweet_message)
+    # shorten message
+    remaining_length = 140 - (url_length + len(tweet_tags) -2) # 2 space
+    if len(tweet_message) > remaining_length:
+        tweet_message = tweet_message[:(remaining_length-3)] + '...' 
+    tweet_body = '%s %s %s' % (tweet_message, tweet_url, tweet_tags)
+    
+    if twitter is not None:
+        twitter.update_status(tweet_body)
+
 def get_last_execution_time_and_subject(conn, hour_difference=-3):
     """Get the last execution time and message subject. The hour_difference
     parameter is used to specify the difference between the UTC time and the
@@ -109,20 +124,6 @@ def get_config():
         logger.exception(e)
         sys.exit(ERROR_EXIT_CODE)
     return config
-
-def tweet(tweet_message, tweet_url, tweet_tags, url_length, twitter):
-    if twitter is not None:
-        logger.info('Tweeting new release: ' + tweet_message)
-    else:
-        logger.info('DRY-RUN Tweeting new release: ' + tweet_message)
-    # shorten message
-    remaining_length = 140 - (url_length + len(tweet_tags) -2) # 2 space
-    if len(tweet_message) > remaining_length:
-        tweet_message = tweet_message[:(remaining_length-3)] + '...' 
-    tweet_body = '%s %s %s' % (tweet_message, tweet_url, tweet_tags)
-    
-    if twitter is not None:
-        twitter.update_status(tweet_body)
 
 def main():
     """Application entry point"""
