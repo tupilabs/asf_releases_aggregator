@@ -10,7 +10,7 @@ and Tweepy.
 ## Configuration
 
 The bot is configured through the *aggregator.cfg* file. It is a simple INI file, with field groups.
-The following code listing contains an example configuration file.
+The following code listing contains an example *aggregator.cfg* configuration file.
 
 ```
 [aggregator]
@@ -21,10 +21,6 @@ max_pages=2
 
 [twitter]
 tweet_url_length=22
-consumer_key=
-consumer_secret=
-access_key=
-access_token=
 ```
 
 Fields details.
@@ -36,6 +32,22 @@ Fields details.
 * **consumer_secret** Twitter consumer secret
 * **access_key** Twitter access key
 * **access_token** Twitter access token
+
+The Twitter credentials are stored in a *.env* dotEnv file.
+
+```
+TWITTER_CONSUMER_KEY=
+TWITTER_CONSUMER_SECRET=
+TWITTER_ACCESS_KEY=
+TWITTER_ACCESS_TOKEN=
+```
+
+This file is also in .gitignore, so that it does not get committed by accident.
+
+The entry point script *markmail_consumer.py* accepts one parameter, *--dry-run* to
+allow you running the script and inspect the would-be output. This way you do not need
+the Twitter credentials, and can check if there is anything wrong with the data or
+with the script.
 
 ## Execution details
 
