@@ -50,6 +50,20 @@ last execution time (step #2)
 
 Every step includes logging that can be found in the server.
 
+## Dependencies
+
+For a complete list, see requirements.txt. You can install them all with pip by running
+`pip install -r requirements.txt`, or use *conda* to manually install them with
+[Anaconda](https://www.continuum.io/).
+
+There is one dependency that is not a PIP package, but a Git submodule. You can initialise
+it by running the following set of commands.
+
+```
+git submodule init
+git submodule update
+```
+
 ## License
 
 The code is licensed under the Apache License v2. The Markmail API used by this code, it licensed under
