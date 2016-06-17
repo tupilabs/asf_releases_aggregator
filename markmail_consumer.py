@@ -70,7 +70,7 @@ def get_last_execution_time_and_subject(conn):
         last_execution = datetime.utcnow()
         subject = ''
         c = conn.cursor()
-        c.execute('SELECT last_execution AS ["timestamp"], subject, count FROM executions ORDER BY last_execution LIMIT 1')
+        c.execute('SELECT last_execution AS ["timestamp"], subject, count FROM executions ORDER BY last_execution DESC LIMIT 1')
         row = c.fetchone()
         if row is not None:
             last_execution = row[0]
