@@ -81,7 +81,7 @@ def get_last_execution_time_and_subject(conn):
         logger.fatal('Error getting last execution time and subject')
         logger.exception(e)
         sys.exit(ERROR_EXIT_CODE)
-
+    last_execution = last_execution.replace(tzinfo=timezone('UTC'))
     logger.debug('Last execution: ' + str(last_execution))
     logger.debug('Last subject: ' + str(subject))
     return (last_execution, subject)
