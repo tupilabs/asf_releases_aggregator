@@ -10,7 +10,7 @@ import configparser
 import sqlite3
 import argparse
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from pytz import timezone
 
 import logging
@@ -195,7 +195,7 @@ def main():
                     except Exception as e:
                         logger.fatal('Failed to parse result date: ' + str(result['date']) + '. Reason: ' + e.message)
                         continue
-                    if (last_execution - post_date) >= timedelta(0):
+                    if last_execution.timestamp() > post_date.timestamp():
                         logger.debug('Skipping message. Reason: too old. Date: ' + str(post_date))
                         continue
                     
